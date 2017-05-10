@@ -1,0 +1,39 @@
+\documentclass{article}
+
+\title{Probabilistic Programming Languages Notes}
+
+\begin{document}
+\maketitle
+
+\section{Notes from reading Practical Probabilistic Programming by Avi Pfeffer}
+
+\subsection{Probabilistic Model as Proof tree}
+
+Examining probabilistic models using a proof-tree construct.
+Is this useful? Has this been done? What do we get from this?
+What role would proof search play in such a representation?
+
+\section{Type level definition of a probabilistic model}
+
+Could we specify a model using types in the same way that
+servant implements their API type? Not quite sure how it's
+done, but I think dependencies could be encoded at the type
+level, and the specific *way* in which some variable depends
+on another could be specified in the type.
+
+What benefit could be wrought from representing a probabilistic
+model in a type?
+
+Well, much in the same way as servant, the resulting
+model that you would have to implement would construct
+a series of monadic (or is applicative more appropriate?)
+actions, where the monad is some kind of probability monad.
+Except it is different from the simple Random monad in
+which only simulation is possible; we could implement
+this monad as a free monad (is my understanding of this
+correct?), in which case we preserve all
+the structure of the computations afterwards (and only use
+special combinators to construct such our probabilistic
+computations).
+
+\end{document}
