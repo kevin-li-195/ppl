@@ -1,5 +1,13 @@
 \documentclass{article}
 
+\usepackage{listings}
+\usepackage{amsthm,amsmath,amssymb}
+
+\theoremstyle{definition}
+\newtheorem{qst}{Question}
+
+\lstset{basicstyle=\footnotesize\ttfamily}
+
 \title{Probabilistic Programming Languages Notes}
 
 \begin{document}
@@ -15,25 +23,66 @@ What role would proof search play in such a representation?
 
 \section{Type level definition of a probabilistic model}
 
-Could we specify a model using types in the same way that
+\textbf{Motivation:} Could we specify a model using types in the same way that
 servant implements their API type? Not quite sure how it's
 done, but I think dependencies could be encoded at the type
 level, and the specific *way* in which some variable depends
 on another could be specified in the type.
 
-What benefit could be wrought from representing a probabilistic
-model in a type?
+\begin{qst}
+    \emph{What benefit could be wrought from representing a probabilistic model in a type?}
 
-Well, much in the same way as servant, the resulting
-model that you would have to implement would construct
-a series of monadic (or is applicative more appropriate?)
-actions, where the monad is some kind of probability monad.
-Except it is different from the simple Random monad in
-which only simulation is possible; we could implement
-this monad as a free monad (is my understanding of this
-correct?), in which case we preserve all
-the structure of the computations afterwards (and only use
-special combinators to construct such our probabilistic
-computations).
+    An obvious benefit is that now, you can guarantee that queries of
+    the model are type-safe, as you can only query values
+    that are literally specified in the type!
+
+    Well, much in the same way as servant's Handler monad, the resulting
+    model that you would have to implement would construct
+    a series of monadic (or is applicative more appropriate?)
+    actions, where the monad is some kind of probability monad.
+    Except it is different from the simple Random monad in
+    which only simulation is possible; we could implement
+    this monad as a free monad (is my understanding of this
+    correct?), in which case we preserve all
+    the structure of the computations afterwards (and only use
+    special combinators to construct such our probabilistic
+    computations).
+
+    We could define the Model type inductively. The definition
+    could look as follows.
+
+    \begin{lstlisting}
+    type Model = Component <|> Component
+    -- Missing some initial part corresponding to arguments to cond. prob.
+    -- A model is simply is a conditional probability, no?
+
+    type Component = -- probabilistic sub-computations?
+    \end{lstlisting}
+\end{qst}
+
+\begin{qst}
+    \emph{At first glance, Figaro forces the user to choose the
+    inference algorithm. Would we instead be able to infer
+    whether or not exact inference is possible from the type
+    (if we had a clever enough type)?}
+\end{qst}
+
+\begin{qst}
+    \emph{What combinators should we have?}
+
+    \begin{lstlisting}
+probGT :: Prob Double -> Double -> Prob a -> Prob b -> Model (a/b) ?
+-- ^ If the probability is greater than some threshold, then a otherwise b.
+-- Is it required that a = b?
+
+-- This would actually not be necessary if Prob were a functor, because
+-- we could simple fmap (>) ma
+    \end{lstlisting}
+\end{qst}
+
+\begin{qst}
+    \emph{Are Arrows useful for representing conditional probability?
+    Is there some kind of datatype representing injective functions?}
+\end{qst}
 
 \end{document}
