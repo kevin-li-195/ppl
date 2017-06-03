@@ -2,8 +2,14 @@
 
 module Main where
 
+import Data.Stochastic
+import Data.Proxy
+
 import Model.Types
+import Model.Internal
 import Model
+
+import System.Random
 
 type MyModel
   = "bias" :=: Double
@@ -14,14 +20,16 @@ type DupModel
   = "coin" :=: Double
   :|: "undecl" :=: Double |-> "bias" :=: Bool
 
-rec :: Observation MyModel
-rec = undefined
+model :: SimulationModel MyModel
+model 
+  = beta 2 2
+  :|: bernoulli
+  :|: \d -> bernoulli 0.5 >>= \b -> if b then pure 3 else pure 5
 
-model :: ValidModel MyModel => Model MyModel
-model = undefined
-
-dupModel :: ValidModel DupModel => Model DupModel
-dupModel = undefined
+p :: Proxy MyModel
+p = Proxy
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = do
+  (res, g') <- simulate p model <$> getStdGen
+  print res

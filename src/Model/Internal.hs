@@ -85,7 +85,7 @@ type family SymbolAnalysis' (decls :: [Symbol]) (code :: *) :: Constraint where
 type SymbolAnalysis code = SymbolAnalysis' '[] code
 
 -- | Named variable.
-data (s :: Symbol) :=: (a :: *) = s :=: a
+data (s :: Symbol) :=: (a :: *)
 infixr 7 :=:
 
 -- | Directed dependency.
