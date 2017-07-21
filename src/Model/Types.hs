@@ -43,8 +43,7 @@ type family Observation' (m :: *) :: Row * where
 
 type Observation a = Rec (Observation' a)
 
--- | Compute the empty row, or additional variables that
--- are introduced while performing a simulation.
+-- | Compute the variable introduced while performing a simulation.
 -- We only compute the added variable for the current
 -- step of the simulation.
 type family VarIntro (m :: *) :: Row * where
@@ -72,7 +71,8 @@ type family ReqArgs (m :: *) (r :: Row *) :: Constraint where
 
 -- | A model must be an instance of the 'CanSimulate'
 -- typeclass in order to be able to generate samples from
--- model.
+-- model, receiving as input a Rec p, and returning
+-- a Rec q, which may be different.
 class CanSimulate (model :: *) (p :: Row *) (q :: Row *) where
   runSim
     :: Proxy model
@@ -84,8 +84,7 @@ class CanSimulate (model :: *) (p :: Row *) (q :: Row *) where
 instance (CanSimulate a p q, CanSimulate b q r) => CanSimulate (a :|: b) p r where
   runSim _ (m :|: m') g rec
     = let (c :: Rec q, g') = runSim (Proxy :: Proxy a) (m :: SimulationModel a) g (rec :: Rec p)
-          (c' :: Rec r, g'') = runSim (Proxy :: Proxy b) (m' :: SimulationModel b) g' (c :: Rec q)
-      in (c' :: Rec r, g'')
+      in runSim (Proxy :: Proxy b) (m' :: SimulationModel b) g' (c :: Rec q)
 
 instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate b p q) => CanSimulate ((name :=: t) |-> b) p q where
   runSim _ f g rec = (runSim prox (f (rec .! l :: t)) g rec) :: (Rec q, StdGen)
