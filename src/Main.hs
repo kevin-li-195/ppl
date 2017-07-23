@@ -2,8 +2,11 @@
 
 module Main where
 
-import Data.Stochastic
 import Data.Proxy
+import Data.Random
+import Data.Random.Distribution.Binomial
+import Data.Random.Distribution.Bernoulli
+import Data.Random.Distribution.Beta
 
 import Model.Types
 import Model.Internal
@@ -22,9 +25,9 @@ type DupModel
 
 model :: SimulationModel MyModel
 model 
-  = beta 2 2
-  :|: bernoulli
-  :|: \d -> bernoulli 0.5 >>= \b -> if b then pure 3 else pure 5
+  = SomeDist (Beta 2 2)
+  :|: (\b -> SomeDist (Bernoulli b))
+  :|: (\p -> SomeDist (Binomial 100 p))
 
 p :: Proxy MyModel
 p = Proxy

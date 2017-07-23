@@ -4,7 +4,6 @@ module Model where
 
 import Data.OpenRecords
 import Data.Proxy
-import Data.Stochastic
 
 import Model.Types
 import Model.Internal

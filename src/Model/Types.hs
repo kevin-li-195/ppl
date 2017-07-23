@@ -1,4 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
@@ -12,8 +14,10 @@
 
 module Model.Types where
 
+import Control.Monad.State
+
 import Data.Kind
-import Data.Stochastic
+import Data.Random
 import Data.OpenRecords
 import Data.Proxy
 import GHC.TypeLits
@@ -22,10 +26,14 @@ import Model.Internal
 
 import System.Random
 
+-- | Existential over Distributions in random-fu.
+data SomeDist t where
+  SomeDist :: (Distribution d t) => d t -> SomeDist t
+
 -- | Closed type family to compute necessary type of a
 -- probabilistic model for simulation.
 type family SimulationModel m :: * where
-  SimulationModel (name :=: t) = Sampler t
+  SimulationModel (name :=: t) = SomeDist t
   SimulationModel ((name :=: t) |-> b) = t -> SimulationModel b
   SimulationModel (a :|: b) = SimulationModel a :|: SimulationModel b
 
@@ -92,7 +100,7 @@ instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate b p q) =
           prox = Proxy :: Proxy b
 
 instance (KnownSymbol name, Extend name t p ~ q) => CanSimulate (name :=: t) p q where
-  runSim _ s g rec
-    = let (res, g') = sample (s :: Sampler t) g
+  runSim _ (SomeDist d) g rec
+    = let (res, g') = sampleState d g
           l = Label :: Label name
       in (extend l res rec, g')
