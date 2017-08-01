@@ -1,4 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -11,6 +13,9 @@
 module Model.Internal where
 
 import Data.Kind
+import Data.Proxy
+import Data.OpenRecords
+
 import GHC.TypeLits
 
 -- | Convenient wrapper around IsElem'.
@@ -57,6 +62,44 @@ instance
     Text "It is likely a duplicate symbol declaration."
   ) => NotElem' x (x ': xs) orig
 
+-- | Computes constraint requiring that a given Symbol
+-- is defined in the model.
+type family VarInModel (s :: Symbol) (m :: *) :: Constraint where
+  VarInModel s m = IsElem s (Fsts (ModelVars m))
+
+-- | Computes list of variable names 
+-- and types in a model.
+type family ModelVars (m :: *) :: [(Symbol, *)] where
+  ModelVars m = ModelVars' '[] m
+
+type family ModelVars' (vars :: [(Symbol, t)]) (m :: *) :: [(Symbol, t)] where
+  ModelVars' l (a :|: b) = ModelVars' (ModelVars' l a) b
+  ModelVars' l (a |-> b) = ModelVars' l b
+  ModelVars' l (name :=: t) = '(name, t) ': l
+  ModelVars' _ c = TypeError (
+    Text "Type error when trying to compute the list of variables in model"
+    :$$:
+    ShowType c
+    )
+
+type family Fsts' (l :: [(a, b)]) (acc :: [a]) :: [a] where
+  Fsts' '[] out = out
+  Fsts' ('(a, b) ': xs) out = a ': (Fsts' xs out)
+
+-- | Project variable names from type-level list of Pairs.
+-- Preserves ordering of variable names.
+type family Fsts (l :: [(s, t)]) :: [s] where
+  Fsts l = Fsts' l '[]
+
+-- | Project types from type-level list of Pairs.
+-- Preserves ordering of types in original list.
+type family Snds (l :: [(a, b)]) :: [b] where
+  Snds l = Snds' l '[]
+
+type family Snds' (l :: [(a, b)]) (acc :: [b]) :: [b] where
+  Snds' '[] out = out
+  Snds' ('(s, t) ': xs) out = t ': (Snds' xs out)
+
 -- | Base case.
 instance {-# OVERLAPPING #-} NotElem' x '[] orig
 -- | Induction step.
@@ -84,6 +127,37 @@ type family SymbolAnalysis' (decls :: [Symbol]) (code :: *) :: Constraint where
 -- | Wrapper for computing actual symbol analysis constraint.
 type SymbolAnalysis code = SymbolAnalysis' '[] code
 
+type family Typecheck' (vars :: [(Symbol, *)]) (init :: [(Symbol, *)]) (m :: *) (model :: *) :: Constraint where
+  Typecheck' '[] init _ model = TypeError (
+    Text "Encountered end of list of defined variables while typechecking model."
+    :$$: ShowType model
+    :$$: ShowType init
+    )
+  Typecheck' l init (a :|: b) model = (Typecheck' l init a model , Typecheck' l init b model)
+  Typecheck' l init (a |-> b) model = (Typecheck' l init a model, Typecheck' l init b model)
+  Typecheck' ('(n, t) ': vs) init (n :=: t) model = ()
+  -- ^ Typechecks.
+  Typecheck' ('(n, t) ': vs) init (n :=: t') model = TypeError (
+    Text "Typechecking model failed. Inconsistently type variables used."
+    :$$: ShowType n
+    :$$: Text "has type: "
+    :<>: ShowType t
+    :$$: Text "and: "
+    :<>: ShowType t'
+    )
+  -- ^ Does not typecheck.
+  Typecheck' ('(n, t) ': vs) init (m :=: t') model = Typecheck' vs init (m :=: t') model
+  -- ^ Not a match in symbol table. Continue.
+  Typecheck' _ init _ model = TypeError (
+    Text "Unknown error in typechecker. Weird type."
+    :$$: ShowType model
+    :$$: ShowType init
+    )
+
+-- | Typecheck variables in model. Each variable must always
+-- have the same type wherever it appears.
+type Typecheck m = Typecheck' (ModelVars m) (ModelVars m) m m
+
 -- | Named variable.
 data (s :: Symbol) :=: (a :: *)
 infixr 7 :=:
@@ -98,6 +172,5 @@ infixr 5 :|:
 
 -- | Computes constraints on models.
 -- Future constraints can be attached to this one.
--- TODO: Typecheck variables.
 type family ValidModel (m :: *) :: Constraint where
-  ValidModel m = SymbolAnalysis m
+  ValidModel m = (SymbolAnalysis m, Typecheck m)
