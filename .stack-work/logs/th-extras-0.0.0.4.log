@@ -1,6 +1,0 @@
-Configuring th-extras-0.0.0.4...
-Preprocessing library for th-extras-0.0.0.4..
-Building library for th-extras-0.0.0.4..
-[1 of 1] Compiling Language.Haskell.TH.Extras ( src/Language/Haskell/TH/Extras.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Language/Haskell/TH/Extras.o )
-Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/th-extras-0.0.0.4-HCAWbnvh2kN3eFTpJBKHlO
-Registering library for th-extras-0.0.0.4..

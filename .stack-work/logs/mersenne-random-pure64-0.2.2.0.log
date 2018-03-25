@@ -1,9 +1,0 @@
-Configuring mersenne-random-pure64-0.2.2.0...
-Preprocessing library for mersenne-random-pure64-0.2.2.0..
-Building library for mersenne-random-pure64-0.2.2.0..
-[1 of 4] Compiling System.Random.Mersenne.Pure64.Base ( .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/System/Random/Mersenne/Pure64/Base.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/System/Random/Mersenne/Pure64/Base.o )
-[2 of 4] Compiling System.Random.Mersenne.Pure64.Internal ( System/Random/Mersenne/Pure64/Internal.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/System/Random/Mersenne/Pure64/Internal.o )
-[3 of 4] Compiling System.Random.Mersenne.Pure64.MTBlock ( System/Random/Mersenne/Pure64/MTBlock.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/System/Random/Mersenne/Pure64/MTBlock.o )
-[4 of 4] Compiling System.Random.Mersenne.Pure64 ( System/Random/Mersenne/Pure64.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/System/Random/Mersenne/Pure64.o )
-Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/mersenne-random-pure64-0.2.2.0-60uKuwEkCr4HbgBy9XHGZP
-Registering library for mersenne-random-pure64-0.2.2.0..
