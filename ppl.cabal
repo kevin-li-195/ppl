@@ -1,0 +1,80 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 38902d5b8a46714e4aad1c2f63d6d87d168ffaf041f55edf72b0c0be78c18dce
+
+name:           ppl
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/githubuser/ppl#readme>
+homepage:       https://github.com/githubuser/ppl#readme
+bug-reports:    https://github.com/githubuser/ppl/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2018 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/ppl
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      CTRex >=0.6 && <0.7
+    , base >=4.7 && <5
+    , mtl >=2.2 && <2.3
+    , random >=1.1 && <1.2
+    , random-fu >=0.2 && <0.3
+  exposed-modules:
+      Main
+      Model
+      Model.Internal
+      Model.Types
+  other-modules:
+      Paths_ppl
+  default-language: Haskell2010
+
+executable ppl-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      CTRex >=0.6 && <0.7
+    , base >=4.7 && <5
+    , mtl >=2.2 && <2.3
+    , ppl
+    , random >=1.1 && <1.2
+    , random-fu >=0.2 && <0.3
+  other-modules:
+      Model
+      Model.Internal
+      Model.Types
+      Paths_ppl
+  default-language: Haskell2010
+
+test-suite ppl-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      CTRex >=0.6 && <0.7
+    , base >=4.7 && <5
+    , mtl >=2.2 && <2.3
+    , ppl
+    , random >=1.1 && <1.2
+    , random-fu >=0.2 && <0.3
+  other-modules:
+      Paths_ppl
+  default-language: Haskell2010

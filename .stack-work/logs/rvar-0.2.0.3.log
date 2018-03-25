@@ -1,0 +1,22 @@
+Configuring rvar-0.2.0.3...
+Preprocessing library for rvar-0.2.0.3..
+Building library for rvar-0.2.0.3..
+[1 of 1] Compiling Data.RVar        ( src/Data/RVar.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/RVar.o )
+
+[;1msrc/Data/RVar.hs:42:1: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wunused-imports[0m[0m[;1m][0m[0m[;1m
+    The import of ‘Control.Applicative’ is redundant
+      except perhaps to import instances from ‘Control.Applicative’
+    To import instances alone, use: import Control.Applicative()[0m[0m
+[;1m[34m   |[0m[0m
+[;1m[34m42 |[0m[0m [;1m[35mimport Control.Applicative[0m[0m
+[;1m[34m   |[0m[0m[;1m[35m ^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m
+[0m[0m[0m
+[;1msrc/Data/RVar.hs:47:1: [;1m[35mwarning:[0m[0m[;1m [[;1m[35m-Wunused-imports[0m[0m[;1m][0m[0m[;1m
+    The qualified import of ‘Control.Monad.Identity’ is redundant
+      except perhaps to import instances from ‘Control.Monad.Identity’
+    To import instances alone, use: import Control.Monad.Identity()[0m[0m
+[;1m[34m   |[0m[0m
+[;1m[34m47 |[0m[0m [;1m[35mimport qualified Control.Monad.Identity as MTL[0m[0m
+[;1m[34m   |[0m[0m[;1m[35m ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m
+[0m[0m[0mInstalling library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/rvar-0.2.0.3-3FCtk8QK7CaG1j24Wt5LS3
+Registering library for rvar-0.2.0.3..

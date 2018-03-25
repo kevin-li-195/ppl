@@ -1,0 +1,10 @@
+[1 of 2] Compiling Main             ( /tmp/stack30454/log-domain-0.12/Setup.lhs, /tmp/stack30454/log-domain-0.12/.stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/setup/Main.o )
+[2 of 2] Compiling StackSetupShim   ( /home/chokboy/.stack/setup-exe-src/setup-shim-mPHDZzAJ.hs, /tmp/stack30454/log-domain-0.12/.stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/setup/StackSetupShim.o )
+Linking /tmp/stack30454/log-domain-0.12/.stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/setup/setup ...
+Configuring log-domain-0.12...
+Preprocessing library for log-domain-0.12..
+Building library for log-domain-0.12..
+[1 of 2] Compiling Numeric.Log      ( src/Numeric/Log.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Numeric/Log.o )
+[2 of 2] Compiling Numeric.Log.Signed ( src/Numeric/Log/Signed.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Numeric/Log/Signed.o )
+Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/log-domain-0.12-G2IXXyVLioeKDcVECabOa8
+Registering library for log-domain-0.12..

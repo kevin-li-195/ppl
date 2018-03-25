@@ -1,0 +1,6 @@
+Configuring CTRex-0.6...
+Preprocessing library for CTRex-0.6..
+Building library for CTRex-0.6..
+[1 of 1] Compiling Data.OpenRecords ( Data/OpenRecords.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/OpenRecords.o )
+Installing library in /home/chokboy/projects/ppl/.stack-work/install/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/CTRex-0.6-4oH7UTvK7lFJYRtfZqujcU
+Registering library for CTRex-0.6..

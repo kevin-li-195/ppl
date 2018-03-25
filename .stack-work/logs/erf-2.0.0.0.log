@@ -1,0 +1,6 @@
+Configuring erf-2.0.0.0...
+Preprocessing library for erf-2.0.0.0..
+Building library for erf-2.0.0.0..
+[1 of 1] Compiling Data.Number.Erf  ( src/Data/Number/Erf.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/Number/Erf.o )
+Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/erf-2.0.0.0-FIyUTQ0buYn83lNwX85oAb
+Registering library for erf-2.0.0.0..

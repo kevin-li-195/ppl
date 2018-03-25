@@ -1,0 +1,15 @@
+Configuring stateref-0.3...
+Preprocessing library for stateref-0.3..
+Building library for stateref-0.3..
+[ 1 of 10] Compiling Data.MRef.Types  ( src/Data/MRef/Types.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/MRef/Types.o )
+[ 2 of 10] Compiling Data.StateRef.Types ( src/Data/StateRef/Types.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/StateRef/Types.o )
+[ 3 of 10] Compiling Data.StateRef.Instances.Undecidable ( src/Data/StateRef/Instances/Undecidable.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/StateRef/Instances/Undecidable.o )
+[ 4 of 10] Compiling Data.StateRef.Instances.STM ( src/Data/StateRef/Instances/STM.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/StateRef/Instances/STM.o )
+[ 5 of 10] Compiling Data.StateRef.Instances ( src/Data/StateRef/Instances.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/StateRef/Instances.o )
+[ 6 of 10] Compiling Data.Accessor    ( src/Data/Accessor.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/Accessor.o )
+[ 7 of 10] Compiling Data.StateRef    ( src/Data/StateRef.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/StateRef.o )
+[ 8 of 10] Compiling Data.MRef.Instances.STM ( src/Data/MRef/Instances/STM.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/MRef/Instances/STM.o )
+[ 9 of 10] Compiling Data.MRef.Instances ( src/Data/MRef/Instances.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/MRef/Instances.o )
+[10 of 10] Compiling Data.MRef        ( src/Data/MRef.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Data/MRef.o )
+Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/stateref-0.3-7xGZKytUnD48UsY0TKBZn4
+Registering library for stateref-0.3..

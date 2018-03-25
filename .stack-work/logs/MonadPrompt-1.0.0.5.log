@@ -1,0 +1,6 @@
+Configuring MonadPrompt-1.0.0.5...
+Preprocessing library for MonadPrompt-1.0.0.5..
+Building library for MonadPrompt-1.0.0.5..
+[1 of 1] Compiling Control.Monad.Prompt ( Control/Monad/Prompt.hs, .stack-work/dist/x86_64-linux-tinfo6-nopie/Cabal-2.0.1.0/build/Control/Monad/Prompt.o )
+Installing library in /home/chokboy/.stack/snapshots/x86_64-linux-tinfo6-nopie/lts-11.1/8.2.2/lib/x86_64-linux-ghc-8.2.2/MonadPrompt-1.0.0.5-CzhXuqwnSyt8FMVt4Y4aVT
+Registering library for MonadPrompt-1.0.0.5..

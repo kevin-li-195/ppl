@@ -32,6 +32,9 @@ model
 p :: Proxy MyModel
 p = Proxy
 
+r :: Proxy MyModel
+r = Proxy
+
 main :: IO ()
 main = do
   (res, g') <- simulate p model <$> getStdGen
