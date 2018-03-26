@@ -10,6 +10,7 @@ import Data.Random.Distribution.Beta
 
 import Model.Types
 import Model.Internal
+import Model.Simulation.Types
 import Model
 
 import System.Random
@@ -26,14 +27,17 @@ type DupModel
 model :: SimulationModel MyModel
 model 
   = SomeDist (Beta 2 2)
-  :|: (\b -> SomeDist (Bernoulli b))
-  :|: (\p -> SomeDist (Binomial 100 p))
+  :|: ToSomeDist (\b -> SomeDist (Bernoulli b))
+  :|: ToSomeDist (\p -> SomeDist (Binomial 100 p))
 
 p :: Proxy MyModel
 p = Proxy
 
 r :: Proxy MyModel
 r = Proxy
+
+x :: Proxy DupModel
+x = Proxy
 
 main :: IO ()
 main = do

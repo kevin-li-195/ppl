@@ -26,7 +26,6 @@ import GHC.TypeLits
 import Model.Internal
 
 import System.Random
-import Unsafe.Coerce
 
 -- | Typeclass for removing list of Labels from a record
 -- given a list of Symbols.
@@ -42,8 +41,14 @@ instance (KnownSymbol s, RemoveLabels ss p q, q :- s ~ r) => RemoveLabels (s ': 
           prox = Proxy :: Proxy ss
 
 -- | Existential over instances of Distribution in random-fu.
+-- TODO: Do not export this, but export functions to construct
+-- canonical distributions.
+-- 
+-- This is also used interally to construct functions that build into
+-- distributions.
 data SomeDist t where
   SomeDist :: (Distribution d t) => d t -> SomeDist t
+  ToSomeDist :: t -> SomeDist t
 
 -- | List of variable-type pairs minus the given observed
 -- variable names.
@@ -65,6 +70,8 @@ type family ProposalDist (init :: [(Symbol, *)]) (mvars :: [(Symbol, *)]) :: * w
   ProposalDist init '[ '(n, t) ] = (Rec (FromList init)) -> SomeDist t
   ProposalDist init ('(n, t) ': xs) = (Rec (FromList init) -> SomeDist t) :|: (ProposalDist init xs)
 
+type Unobserved m obs = VarsMinus (ModelVars m) obs
+
 -- | Class of models from which we can propose new posterior samples
 -- given a conditional proposal distribution.
 -- TODO: Require proxies for model and obs. For this class and
@@ -78,8 +85,6 @@ class CanPropose (m :: *) (obs :: [Symbol]) (q :: [(Symbol, *)]) where
     -> Rec (FromList (Unobserved m obs))
     -> StdGen 
     -> (Rec (FromList q), StdGen)
-
-type Unobserved m obs = VarsMinus (ModelVars m) obs
 
 instance KnownSymbol n => CanPropose m obs '[ '(n, t) ] where
   propose _ _ _ f arg g =
@@ -145,13 +150,6 @@ type family Observation' (obs :: [Symbol]) (vars :: [(Symbol, *)]) (varsInit :: 
 -- | A sample record.
 type Sample a = Rec (Sample' a)
 
--- | Closed type family to compute necessary type of a
--- probabilistic model for simulation.
-type family SimulationModel m :: * where
-  SimulationModel (name :=: t) = SomeDist t
-  SimulationModel ((name :=: t) |-> b) = t -> SimulationModel b
-  SimulationModel (a :|: b) = SimulationModel a :|: SimulationModel b
-
 -- | Compute the variable introduced while performing a simulation.
 -- We only compute the added variable for the current
 -- step of the simulation.
@@ -184,31 +182,3 @@ type family ReqArgs (m :: *) (r :: Row *) :: Constraint where
 type family FromList (mvars :: [(Symbol, *)]) :: Row * where
   FromList '[] = Empty
   FromList ('(n, t) ': xs) = Extend n t (FromList xs)
-
--- | A model must be an instance of the 'CanSimulate'
--- typeclass in order to be able to generate samples from
--- model, receiving as input a Rec p, and returning
--- a Rec q, which may be different.
-class CanSimulate (model :: *) (p :: Row *) (q :: Row *) where
-  runSim
-    :: Proxy model
-    -> SimulationModel model
-    -> StdGen
-    -> Rec p
-    -> (Rec q, StdGen)
-
-instance (CanSimulate a p q, CanSimulate b q r) => CanSimulate (a :|: b) p r where
-  runSim _ (m :|: m') g rec
-    = let (c :: Rec q, g') = runSim (Proxy :: Proxy a) (m :: SimulationModel a) g (rec :: Rec p)
-      in runSim (Proxy :: Proxy b) (m' :: SimulationModel b) g' (c :: Rec q)
-
-instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate b p q) => CanSimulate ((name :=: t) |-> b) p q where
-  runSim _ f g rec = (runSim prox (f (rec .! l :: t)) g rec) :: (Rec q, StdGen)
-    where l = Label :: Label name
-          prox = Proxy :: Proxy b
-
-instance (KnownSymbol name, Extend name t p ~ q) => CanSimulate (name :=: t) p q where
-  runSim _ (SomeDist d) g rec
-    = let (res, g') = sampleState d g
-          l = Label :: Label name
-      in (extend l res rec, g')
