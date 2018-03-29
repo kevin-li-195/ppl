@@ -20,6 +20,7 @@ module Model.Simulation where
 
 import Data.Proxy
 import Data.OpenRecords
+import Data.Random
 
 import Model.Internal
 import Model.Types
@@ -51,43 +52,49 @@ simulate p model gen = runSim p model gen empty
 conditionSim
   ::
   ( ValidModel m
+  , CanPropose m conds
+  , Unobserved m conds ~ vars
   , CanSimulate m
   , CanCondition m conds
   ) => Proxy m
     -> Proxy conds
+    -> Proxy vars
     -> SimulationModel m
-    -> ProposalDist (Unobserved m conds) (Unobserved m conds)
-    -> Condition conds m
+    -> ProposalDist m (Unobserved m conds)
+    -> Sample m
+    -- ^ This is condition record.
     -> StdGen
     -> [Sample m]
-conditionSim pm pconds model prop conds g 
-  = csim pm pconds (mkProx pm pconds) model g prop conds []
+conditionSim pm pconds pvars model prop conds g 
+  = csim pm pconds pvars model g prop conds []
 
 csim :: ( CanCondition m conds
+        , CanPropose m conds
+        , Unobserved m conds ~ vars
         , ValidModel m
         , CanSimulate m
-        -- , RemoveLabels conds (Sample' m) (FromList q)
-        , Unobserved m conds ~ q
         )
      => Proxy m
      -> Proxy conds
-     -> Proxy q
+     -> Proxy vars
      -> SimulationModel m
      -> StdGen
-     -> ProposalDist (Unobserved m conds) q
-     -> Condition conds m
+     -> ProposalDist m vars
+     -> Sample m
+     -- ^ This is actually the condition record.
      -> [Sample m]
      -> [Sample m]
-csim pm pconds prox model g prop conds []
-  = csim pm pconds prox model (snd $ next g) prop conds
-    [removeLabels pconds $ fst $ simulate pm model g]
-csim pm pconds prox model g prop conds (x : xs)
-  = let (candidate, g') = propose pm pconds prox prop x g
+csim pm pconds pvars model g prop conds []
+  = csim pm pconds pvars model (snd $ next g) prop conds
+    [fst $ simulate pm model g]
+csim pm pconds pvars model g prop conds (prev : xs)
+  = let (candidate, g') = propose pm pconds pvars conds prop prev g
         (u, g'') = sampleState (Uniform 0 1.0) g'
-    in csim pm pconds prox model g'' prop conds $
-       if u < (acceptance pm pconds candidate x conds)
-       then candidate : x : xs
-       else x : x : xs
+    in csim pm pconds pvars model g'' prop conds $
+       if u < (acceptance pm pconds candidate prev conds)
+       then candidate : prev : xs
+       else prev : prev : xs
+    -- where pPropVars = Proxy :: Proxy (Unobserved m conds)
 
 acceptance
   :: Proxy m
@@ -96,7 +103,7 @@ acceptance
   -- ^ Candidate
   -> Sample m
   -- ^ Previous
-  -> Condition conds m
+  -> Sample m
   -- ^ Condition
   -> Double
   -- ^ Metropolis-Hastings acceptance ratio

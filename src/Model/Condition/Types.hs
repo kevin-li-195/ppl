@@ -71,7 +71,7 @@ instance (HasCondRecord m ss, KnownSymbol s) => HasCondRecord m (s ': ss) where
 mkLabel :: KnownSymbol s => Proxy s -> Label s
 mkLabel _ = Label
 
-type ProposalDist m conds = ProposalDist' (VarsMinus (ModelVars m) conds) (Sample m)
+type ProposalDist m vars = ProposalDist' (Sample m) vars
 
 -- | Compute the required type for proposal distribution.
 -- This is just a joint probability distribution over the 
@@ -86,34 +86,41 @@ type ProposalDist m conds = ProposalDist' (VarsMinus (ModelVars m) conds) (Sampl
 -- sample. We have done this mainly for simplicity;
 -- the ability to write down arbitrary density functions
 -- is not in the scope of this library.
-type family ProposalDist' (mvars :: [(Symbol, *)]) (target :: *) :: * where
-  ProposalDist' '[] _ = TypeError (
+type family ProposalDist' (prev :: *) (mvars :: [(Symbol, *)]) :: * where
+  ProposalDist' _ '[] = TypeError (
     Text "What are you trying to do? You've conditioned on everything!"
     )
-  ProposalDist' '[ '(s, t) ] sample = SomeDist (sample -> SomeDist t)
-  ProposalDist' ('(s, t) ': xs) sample = SomeDist (sample -> SomeDist t)
-    :|: ProposalDist' xs sample
+  ProposalDist' sample '[ '(s, t) ] = SomeDist (sample -> SomeDist t)
+  ProposalDist' sample ('(s, t) ': xs) = (SomeDist (sample -> SomeDist t))
+    :|: (ProposalDist' sample xs)
 
 -- | Compute constraint that we're allowed to condition
 -- on the provided variables given this model.
-type CanPropose m conds = CanPropose' m conds (Fsts (Unobserved m conds))
+type CanPropose m conds = CanPropose' m conds (Unobserved m conds)
 
--- | Class of models from which we can propose new posterior samples
--- given a conditional proposal distribution.
+-- | Class of models from which we can propose new posterior samples a la
+-- Metropolis-Hastings given a proposal distribution.
 -- TODO: Require proxies for model and obs. For this class and
 -- for the acceptance function.
-class HasCondRecord m conds => CanPropose' (m :: *) (conds :: [Symbol]) (rest :: [Symbol]) where
+class HasCondRecord m conds 
+  => CanPropose' (m :: *) (conds :: [Symbol]) (propVars :: [(Symbol, *)]) where
   propose 
     :: Proxy m
-    -- ^ Model
+    -- ^ Model.
     -> Proxy conds
-    -- ^ Conditions
-    -> Proxy rest
-    -- ^ Non-condition variables
+    -- ^ Conditions. Used to input values for the conditioned values.
+    -> Proxy propVars
+    -- ^ Non-condition variables. These need to be sampled using
+    -- the proposal distribution.
     -> Sample m
-    -- ^ Record of conditions
-    -> ProposalDist m conds
-    -- ^ Proposal/jumping distribution
+    -- ^ Don't be fooled; this is actually the record
+    -- of conditions. TODO: Construct the type of this
+    -- record in a more clever way; this requires tweaking
+    -- HasCondRecord.
+    -> ProposalDist m propVars
+    -- ^ Proposal/jumping distribution. Note that this
+    -- does not depend on the condition because it only requires
+    -- the previous observation of the entire network.
     -> Sample m
     -- ^ Previous observation
     -> StdGen 
@@ -130,21 +137,36 @@ class HasCondRecord m conds => CanPropose' (m :: *) (conds :: [Symbol]) (rest ::
 -- Note that we set the values for the variables
 -- that are *not* conditions to undefined, because
 -- they will be set when we send this record back up.
-instance {-# OVERLAPPING #-} (ProposalDist m conds ~ SomeDist (Sample m -> SomeDist (Sample' m :! s)), HasCondRecord m conds) => CanPropose' m conds '[ s ] where
-  propose pm pconds prest condRec (ToSomeDist f) prev g
-    = let (prop, g') = sampleState (f prev) g
-      in (update l prop (initCondRecord pm pconds condRec), g')
+instance {-# OVERLAPPING #-} 
+  ( KnownSymbol s
+  , t ~ (Sample' m :! s)
+  , HasCondRecord m conds) 
+  => CanPropose' m conds '[ '(s, t) ] where
+  propose pm pConds pPropVars condRec (ToSomeDist f) prev g
+    = let (prop, g') = case f prev of
+                         SomeDist d -> sampleState d g
+                         _ -> error "Uh oh! You broke the universe."
+      in (update l prop (initCondRecord pm pConds condRec), g')
       where l = Label :: Label s
 
 -- | In this step, propose a value for the
 -- non-condition values and set it in the record.
-instance {-# OVERLAPPABLE #-} (CanPropose' m conds ss, KnownSymbol s) => CanPropose' m conds (s ': ss) where
-  propose pm pconds prest condRec ((ToSomeDist f) :|: pdist') prev g
-    = let (rec, g') = propose pm pss condRec pdist' prev g
-          (prop, g'') = sampleState (f prev) g'
-      in (update l prop rec, g'')
-      where pss = Proxy :: Proxy (ss :: [Symbol])
-            l = Label :: Label s
+instance {-# OVERLAPPABLE #-} 
+  ( CanPropose' m conds ss
+  , t ~ (Sample' m :! s)
+  , (ProposalDist' (Sample m) ('(s, t) ': ss)) ~ ((SomeDist (Sample m -> SomeDist t)) :|: ProposalDist' (Sample m) ss)
+  , KnownSymbol s) 
+  => CanPropose' m conds ('(s, t) ': ss) where
+  propose pm pconds pPropVars condRec pdist prev g
+    = case pdist of
+              (ToSomeDist f) :|: (rest :: ProposalDist' (Sample m) ss) 
+                -> let (rec, g') = propose pm pconds pss condRec rest prev g
+                       (prop, g'') = case f prev of 
+                                     SomeDist d -> sampleState d g'
+                   in (update l prop rec, g'')
+                   where pss = Proxy :: Proxy (ss :: [(Symbol, *)])
+                         l = Label :: Label s
+              _ -> error "Uh oh! You broke the universe again!"
 
 -- IDEA: INSTEAD OF USING A DIFFERENT TYPE
 -- FOR A CONDITION, JUST USE THE SAMPLE TYPE.

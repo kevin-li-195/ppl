@@ -28,12 +28,6 @@ import Model.Types
 
 import System.Random
 
--- | Computes the required model specification for the jumping
--- distribution for MH.
-type family ProposalDist (init :: [(Symbol, *)]) (mvars :: [(Symbol, *)]) :: * where
-  ProposalDist init '[ '(n, t) ] = (Rec (FromList init)) -> SomeDist t
-  ProposalDist init ('(n, t) ': xs) = (Rec (FromList init) -> SomeDist t) :|: (ProposalDist init xs)
-
 -- | Closed type family to compute necessary type of a
 -- probabilistic model for simulation.
 type family SimulationModel m :: * where

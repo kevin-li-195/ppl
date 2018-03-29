@@ -8,10 +8,11 @@ import Data.Random.Distribution.Binomial
 import Data.Random.Distribution.Bernoulli
 import Data.Random.Distribution.Beta
 
+import Model
+import Model.Simulation
 import Model.Types
 import Model.Internal
 import Model.Simulation.Types
-import Model
 
 import System.Random
 
