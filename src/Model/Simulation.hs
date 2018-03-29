@@ -24,6 +24,7 @@ import Data.OpenRecords
 import Model.Internal
 import Model.Types
 import Model.Simulation.Types
+import Model.Condition.Types
 
 import System.Random
 
@@ -65,7 +66,7 @@ conditionSim pm pconds model prop conds g
 csim :: ( CanCondition m conds
         , ValidModel m
         , CanSimulate m
-        , RemoveLabels conds (Sample' m) (FromList q)
+        -- , RemoveLabels conds (Sample' m) (FromList q)
         , Unobserved m conds ~ q
         )
      => Proxy m

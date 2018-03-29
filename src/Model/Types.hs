@@ -24,6 +24,7 @@ import Data.Random
 import GHC.TypeLits
 
 import Model.Internal
+import Model.Internal
 
 import System.Random
 
@@ -68,68 +69,39 @@ type family VarsMinus'
   VarsMinus' ('(x, t) ': xs) (x ': xs') init = VarsMinus' xs init init
   VarsMinus' ('(n, t) ': xs) (x ': xs') init = VarsMinus' ('(n, t) ': xs) xs' init
 
+-- | Requirement that we can construct
+-- a Sample from the model 'm' starting
+-- from an empty record.
+type HasRecord m = HasRecord' m Empty (Sample' m)
+
+-- | Class for models where we can create
+-- Records from them.
+class HasRecord' (m :: *) (p :: Row *) (q :: Row *) where
+  initRecord :: Proxy m -> Rec p -> Rec q
+
+instance (HasRecord' a p q, HasRecord' b q r) => HasRecord' (a :|: b) p r where
+  initRecord pm pRec 
+    = let (qRec :: Rec q) = initRecord pa pRec
+      in initRecord pb qRec
+      where pa = Proxy :: Proxy a
+            pb = Proxy :: Proxy b
+
+instance HasRecord' b p r => HasRecord' (a |-> b) p r where
+  initRecord pm pRec 
+    = initRecord pb pRec
+      where pb = Proxy :: Proxy b
+
+-- | WARNING: When we initialize our records, all the
+-- values are undefined. This is unsafe.
+-- TODO: Figure out how to do this in a better
+-- way without sticking Maybes everywhere.
+instance (KnownSymbol n, Extend n t p ~ r) => HasRecord' (n :=: t) p r where
+  initRecord pm pRec = extend l (undefined :: t) pRec
+    where l = Label :: Label n
+
 -- | List of Symbols and types of the variables that
 -- were not observed in the model.
 type Unobserved m obs = VarsMinus (ModelVars m) obs
-
--- | Class of models from which we can propose new posterior samples
--- given a conditional proposal distribution.
--- TODO: Require proxies for model and obs. For this class and
--- for the acceptance function.
-class CanPropose' (m :: *) (conds :: [Symbol]) where
-  propose 
-    :: Proxy m
-    -- ^ Model
-    -> Proxy conds
-    -- ^ Model
-    -> Condition conds m
-    -- ^ Record of conditions
-    -> ProposalDist m conds
-    -- ^ Proposal/jumping distribution
-    -> Sample m
-    -- ^ Previous observation
-    -> StdGen 
-    -> Sample m
-    -- ^ Proposed move location.
-
-type ProposalDist m conds = ProposalDist' (VarsMinus (ModelVars m) conds) (Sample m)
-
--- | Compute the required type for proposal distribution.
--- This is just a joint probability distribution over the 
--- This means that we'll need to specify the conditional
--- distribution for each node, unless it is conditioned upon;
--- if we have conditioned upon a variable, then there is
--- no need to specify the jumping distribution.
---
--- Note that we have implicitly restricted ourselves
--- to proposal distributions where the marginal proposal
--- distributions are conditionally independent given the previous
--- sample. We have done this mainly for simplicity;
--- the ability to write down arbitrary density functions
--- is not in the scope of this library.
-type family ProposalDist' (mvars :: [(Symbol, *)]) (target :: *) :: * where
-  ProposalDist' '[] _ = TypeError (
-    Text "What are you trying to do? You've conditioned on everything!"
-    )
-  ProposalDist' '[ '(s, t) ] sample = SomeDist (sample -> SomeDist t)
-  ProposalDist' ('(s, t) ': xs) sample = SomeDist (sample -> SomeDist t)
-    :|: ProposalDist' xs
-
--- | We use overlapping instances to match cases
--- where the condition is present and when it is not
--- in order to choose the appropriate instance.
--- CONTINUE: We implemented ProposalDist and now we have to implement 'CanPropose'
-instance CanPropose (a :|: b) conds where
-  propose pm pconds condRec pdist prev g
-    = 
-
-instance CanPropose (b) conds where
-  propose pm pconds condRec pdist prev g
-    = 
-
-instance CanPropose (a :|: b) conds where
-  propose pm pconds condRec pdist prev g
-    = 
 
 -- instance KnownSymbol n => CanPropose m obs '[ '(n, t) ] where
 --   propose _ _ _ f arg g =
@@ -166,25 +138,28 @@ type family Sample' (m :: *) :: Row * where
 -- | Computes the record type of an observation, given the list
 -- of observed variable names and the model.
 type family Observation (obs :: [Symbol]) (m :: *) where
-  Observation obs m = Rec (Observation' obs (ModelVars m) (ModelVars m) m)
+  Observation obs m = Rec (Observation' obs m)
 
-type family Observation' (obs :: [Symbol]) (vars :: [(Symbol, *)]) (varsInit :: [(Symbol, *)]) (initModel :: *) :: Row * where
-  Observation' '[] _ _ _ = Empty
+type family Observation' (obs :: [Symbol]) (m :: *) :: Row * where
+  Observation' obs m = Observation'' obs (ModelVars m) (ModelVars m) m
+
+type family Observation'' (obs :: [Symbol]) (vars :: [(Symbol, *)]) (varsInit :: [(Symbol, *)]) (initModel :: *) :: Row * where
+  Observation'' '[] _ _ _ = Empty
   -- ^ No more model variables to add.
-  Observation' (s ': ss) '[] _ model = TypeError (
+  Observation'' (s ': ss) '[] _ model = TypeError (
     Text "Variable: "
     :$$: ShowType s
     :$$: Text "was not defined in the model:"
     :$$: ShowType model
     :$$: Text "and thus could not have been observed."
     )
-  Observation' (s ': ss) ('(s, t) ': vs) init model
-    = Extend s t (Observation' ss init init model)
+  Observation'' (s ': ss) ('(s, t) ': vs) init model
+    = Extend s t (Observation'' ss init init model)
   -- ^ Match. Continue with remaining variable names.
-  Observation' (s ': ss) ('(n, t) ': vs) init model
-    = Observation' (s ': ss) vs init model
+  Observation'' (s ': ss) ('(n, t) ': vs) init model
+    = Observation'' (s ': ss) vs init model
   -- ^ No match yet.
-  Observation' _ _ init model = TypeError (
+  Observation'' _ _ init model = TypeError (
     Text "Unknown error. Could not compute type of observations record."
     :$$: Text "Model was:"
     :$$: ShowType model

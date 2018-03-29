@@ -34,11 +34,6 @@ type family ProposalDist (init :: [(Symbol, *)]) (mvars :: [(Symbol, *)]) :: * w
   ProposalDist init '[ '(n, t) ] = (Rec (FromList init)) -> SomeDist t
   ProposalDist init ('(n, t) ': xs) = (Rec (FromList init) -> SomeDist t) :|: (ProposalDist init xs)
 
--- | The type of record required to provide the
--- condition is the same type as an observation from
--- any model.
-type Condition conds m = Observation conds m
-
 -- | Closed type family to compute necessary type of a
 -- probabilistic model for simulation.
 type family SimulationModel m :: * where
