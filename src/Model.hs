@@ -10,6 +10,12 @@
 
 module Model where
 
+import Data.OpenRecords
+import Data.Proxy
+
 import Model.Types
 import Model.Internal
 import Model.Simulation.Types
+
+makeRecord :: HasRecord m => Proxy m -> Sample m
+makeRecord p = initRecord p empty

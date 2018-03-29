@@ -94,16 +94,12 @@ type family ProposalDist' (prev :: *) (mvars :: [(Symbol, *)]) :: * where
   ProposalDist' sample ('(s, t) ': xs) = (SomeDist (sample -> SomeDist t))
     :|: (ProposalDist' sample xs)
 
--- | Compute constraint that we're allowed to condition
--- on the provided variables given this model.
-type CanPropose m conds = CanPropose' m conds (Unobserved m conds)
-
 -- | Class of models from which we can propose new posterior samples a la
 -- Metropolis-Hastings given a proposal distribution.
 -- TODO: Require proxies for model and obs. For this class and
 -- for the acceptance function.
 class HasCondRecord m conds 
-  => CanPropose' (m :: *) (conds :: [Symbol]) (propVars :: [(Symbol, *)]) where
+  => CanPropose (m :: *) (conds :: [Symbol]) (propVars :: [(Symbol, *)]) where
   propose 
     :: Proxy m
     -- ^ Model.
@@ -141,7 +137,7 @@ instance {-# OVERLAPPING #-}
   ( KnownSymbol s
   , t ~ (Sample' m :! s)
   , HasCondRecord m conds) 
-  => CanPropose' m conds '[ '(s, t) ] where
+  => CanPropose m conds '[ '(s, t) ] where
   propose pm pConds pPropVars condRec (ToSomeDist f) prev g
     = let (prop, g') = case f prev of
                          SomeDist d -> sampleState d g
@@ -152,11 +148,11 @@ instance {-# OVERLAPPING #-}
 -- | In this step, propose a value for the
 -- non-condition values and set it in the record.
 instance {-# OVERLAPPABLE #-} 
-  ( CanPropose' m conds ss
+  ( CanPropose m conds ss
   , t ~ (Sample' m :! s)
   , (ProposalDist' (Sample m) ('(s, t) ': ss)) ~ ((SomeDist (Sample m -> SomeDist t)) :|: ProposalDist' (Sample m) ss)
   , KnownSymbol s) 
-  => CanPropose' m conds ('(s, t) ': ss) where
+  => CanPropose m conds ('(s, t) ': ss) where
   propose pm pconds pPropVars condRec pdist prev g
     = case pdist of
               (ToSomeDist f) :|: (rest :: ProposalDist' (Sample m) ss) 

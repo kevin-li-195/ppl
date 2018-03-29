@@ -103,26 +103,6 @@ instance (KnownSymbol n, Extend n t p ~ r) => HasRecord' (n :=: t) p r where
 -- were not observed in the model.
 type Unobserved m obs = VarsMinus (ModelVars m) obs
 
--- instance KnownSymbol n => CanPropose m obs '[ '(n, t) ] where
---   propose _ _ _ f arg g =
---     let (t, g') = let (SomeDist d) = f arg
---                   in sampleState d g
---     in (extend l t empty, g')
---     where l = Label :: Label n
--- 
--- instance 
---   ( KnownSymbol n
---   , CanPropose m obs (x ': xs)
--- --  , Extend n t (FromList (x ': xs)) ~ FromList ('(n, t) ': x ': xs)
---   ) => CanPropose m obs ('(n, t) ': x ': xs) where
---   propose pm pobs _ (f :|: rest) prev g =
---     let (t, g') = case f prev of
---                      (SomeDist d) -> sampleState d g
---         (rec, g'') = propose pm pobs prox rest prev g'-- :: (Rec (FromList (x ': xs)), StdGen)
---     in (extend l t rec, g'')
---     where l = Label :: Label n
---           prox = Proxy :: Proxy (x ': xs)
-
 -- | Type family to compute the "Row *" type of
 -- samples generated from defined models.
 type family Sample' (m :: *) :: Row * where
