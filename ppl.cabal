@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d6759f53f7d2db2d0d479da3284bc3d6fcbb02d9b397c95624ec49c088218670
+-- hash: b074a110fc69d1a3f1a0d6a0b184556fff4b661e1c43564ae7faa976bce22c1d
 
 name:           ppl
 version:        0.1.0.0
@@ -37,7 +37,9 @@ library
   exposed-modules:
       Main
       Model
+      Model.Condition.Types
       Model.Internal
+      Model.Simulation
       Model.Simulation.Types
       Model.Types
   other-modules:
@@ -58,7 +60,9 @@ executable ppl-exe
     , random-fu >=0.2 && <0.3
   other-modules:
       Model
+      Model.Condition.Types
       Model.Internal
+      Model.Simulation
       Model.Simulation.Types
       Model.Types
       Paths_ppl

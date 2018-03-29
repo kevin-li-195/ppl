@@ -67,6 +67,10 @@ instance
 type family VarInModel (s :: Symbol) (m :: *) :: Constraint where
   VarInModel s m = IsElem s (Fsts (ModelVars m))
 
+type family Fsts (l :: [(a, b)]) :: [a] where
+  Fsts '[] = '[]
+  Fsts ('(a, b) ': xs) = a ': Fsts xs
+
 -- | Computes list of variable names 
 -- and types in a model.
 type family ModelVars (m :: *) :: [(Symbol, *)] where
@@ -82,23 +86,13 @@ type family ModelVars' (vars :: [(Symbol, t)]) (m :: *) :: [(Symbol, t)] where
     ShowType c
     )
 
-type family Fsts' (l :: [(a, b)]) (acc :: [a]) :: [a] where
-  Fsts' '[] out = out
-  Fsts' ('(a, b) ': xs) out = a ': (Fsts' xs out)
+-- | Project first element from type-level tuple.
+type family Fst (t :: (a, b)) :: a where
+  Fst '(a, b) = a
 
--- | Project variable names from type-level list of Pairs.
--- Preserves ordering of variable names.
-type family Fsts (l :: [(s, t)]) :: [s] where
-  Fsts l = Fsts' l '[]
-
--- | Project types from type-level list of Pairs.
--- Preserves ordering of types in original list.
-type family Snds (l :: [(a, b)]) :: [b] where
-  Snds l = Snds' l '[]
-
-type family Snds' (l :: [(a, b)]) (acc :: [b]) :: [b] where
-  Snds' '[] out = out
-  Snds' ('(s, t) ': xs) out = t ': (Snds' xs out)
+-- | Project second element from type-level tuple.
+type family Snd (t :: (a, b)) :: b where
+  Snd '(a, b) = b
 
 -- | Base case.
 instance {-# OVERLAPPING #-} NotElem' x '[] orig

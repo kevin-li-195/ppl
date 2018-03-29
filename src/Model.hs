@@ -10,12 +10,6 @@
 
 module Model where
 
-import Data.OpenRecords
-import Data.Proxy
-import Data.Random
-
 import Model.Types
 import Model.Internal
 import Model.Simulation.Types
-
-import System.Random

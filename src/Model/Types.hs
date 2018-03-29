@@ -44,8 +44,12 @@ instance (KnownSymbol s, RemoveLabels ss p q, q :- s ~ r) => RemoveLabels (s ': 
 -- TODO: Do not export this, but export functions to construct
 -- canonical distributions.
 -- 
--- This is also used interally to construct functions that build into
--- distributions.
+-- This is also used internally to construct functions that build into
+-- distributions. Note that the constructor ToSomeDist is unsafe.
+--
+-- We will need to write smart constructors for SomeDist values.
+-- Most notably, we will need a way to wrap arbitrary pure
+-- functions in a SomeDist for maximum generality.
 data SomeDist t where
   SomeDist :: (Distribution d t) => d t -> SomeDist t
   ToSomeDist :: t -> SomeDist t
@@ -64,47 +68,88 @@ type family VarsMinus'
   VarsMinus' ('(x, t) ': xs) (x ': xs') init = VarsMinus' xs init init
   VarsMinus' ('(n, t) ': xs) (x ': xs') init = VarsMinus' ('(n, t) ': xs) xs' init
 
--- | Computes the required model specification for the jumping
--- distribution for MH.
-type family ProposalDist (init :: [(Symbol, *)]) (mvars :: [(Symbol, *)]) :: * where
-  ProposalDist init '[ '(n, t) ] = (Rec (FromList init)) -> SomeDist t
-  ProposalDist init ('(n, t) ': xs) = (Rec (FromList init) -> SomeDist t) :|: (ProposalDist init xs)
-
+-- | List of Symbols and types of the variables that
+-- were not observed in the model.
 type Unobserved m obs = VarsMinus (ModelVars m) obs
 
 -- | Class of models from which we can propose new posterior samples
 -- given a conditional proposal distribution.
 -- TODO: Require proxies for model and obs. For this class and
 -- for the acceptance function.
-class CanPropose (m :: *) (obs :: [Symbol]) (q :: [(Symbol, *)]) where
+class CanPropose' (m :: *) (conds :: [Symbol]) where
   propose 
     :: Proxy m
-    -> Proxy obs
-    -> Proxy q
-    -> ProposalDist (Unobserved m obs) q
-    -> Rec (FromList (Unobserved m obs))
+    -- ^ Model
+    -> Proxy conds
+    -- ^ Model
+    -> Condition conds m
+    -- ^ Record of conditions
+    -> ProposalDist m conds
+    -- ^ Proposal/jumping distribution
+    -> Sample m
+    -- ^ Previous observation
     -> StdGen 
-    -> (Rec (FromList q), StdGen)
+    -> Sample m
+    -- ^ Proposed move location.
 
-instance KnownSymbol n => CanPropose m obs '[ '(n, t) ] where
-  propose _ _ _ f arg g =
-    let (t, g') = case f arg of
-                     (SomeDist d) -> sampleState d g
-    in (extend l t empty, g')
-    where l = Label :: Label n
+type ProposalDist m conds = ProposalDist' (VarsMinus (ModelVars m) conds) (Sample m)
 
-instance 
-  ( KnownSymbol n
-  , CanPropose m obs (x ': xs)
---  , Extend n t (FromList (x ': xs)) ~ FromList ('(n, t) ': x ': xs)
-  ) => CanPropose m obs ('(n, t) ': x ': xs) where
-  propose pm pobs _ (f :|: rest) prev g =
-    let (t, g') = case f prev of
-                     (SomeDist d) -> sampleState d g
-        (rec, g'') = propose pm pobs prox rest prev g'-- :: (Rec (FromList (x ': xs)), StdGen)
-    in (extend l t rec, g'')
-    where l = Label :: Label n
-          prox = Proxy :: Proxy (x ': xs)
+-- | Compute the required type for proposal distribution.
+-- This is just a joint probability distribution over the 
+-- This means that we'll need to specify the conditional
+-- distribution for each node, unless it is conditioned upon;
+-- if we have conditioned upon a variable, then there is
+-- no need to specify the jumping distribution.
+--
+-- Note that we have implicitly restricted ourselves
+-- to proposal distributions where the marginal proposal
+-- distributions are conditionally independent given the previous
+-- sample. We have done this mainly for simplicity;
+-- the ability to write down arbitrary density functions
+-- is not in the scope of this library.
+type family ProposalDist' (mvars :: [(Symbol, *)]) (target :: *) :: * where
+  ProposalDist' '[] _ = TypeError (
+    Text "What are you trying to do? You've conditioned on everything!"
+    )
+  ProposalDist' '[ '(s, t) ] sample = SomeDist (sample -> SomeDist t)
+  ProposalDist' ('(s, t) ': xs) sample = SomeDist (sample -> SomeDist t)
+    :|: ProposalDist' xs
+
+-- | We use overlapping instances to match cases
+-- where the condition is present and when it is not
+-- in order to choose the appropriate instance.
+-- CONTINUE: We implemented ProposalDist and now we have to implement 'CanPropose'
+instance CanPropose (a :|: b) conds where
+  propose pm pconds condRec pdist prev g
+    = 
+
+instance CanPropose (b) conds where
+  propose pm pconds condRec pdist prev g
+    = 
+
+instance CanPropose (a :|: b) conds where
+  propose pm pconds condRec pdist prev g
+    = 
+
+-- instance KnownSymbol n => CanPropose m obs '[ '(n, t) ] where
+--   propose _ _ _ f arg g =
+--     let (t, g') = let (SomeDist d) = f arg
+--                   in sampleState d g
+--     in (extend l t empty, g')
+--     where l = Label :: Label n
+-- 
+-- instance 
+--   ( KnownSymbol n
+--   , CanPropose m obs (x ': xs)
+-- --  , Extend n t (FromList (x ': xs)) ~ FromList ('(n, t) ': x ': xs)
+--   ) => CanPropose m obs ('(n, t) ': x ': xs) where
+--   propose pm pobs _ (f :|: rest) prev g =
+--     let (t, g') = case f prev of
+--                      (SomeDist d) -> sampleState d g
+--         (rec, g'') = propose pm pobs prox rest prev g'-- :: (Rec (FromList (x ': xs)), StdGen)
+--     in (extend l t rec, g'')
+--     where l = Label :: Label n
+--           prox = Proxy :: Proxy (x ': xs)
 
 -- | Type family to compute the "Row *" type of
 -- samples generated from defined models.

@@ -28,6 +28,17 @@ import Model.Types
 
 import System.Random
 
+-- | Computes the required model specification for the jumping
+-- distribution for MH.
+type family ProposalDist (init :: [(Symbol, *)]) (mvars :: [(Symbol, *)]) :: * where
+  ProposalDist init '[ '(n, t) ] = (Rec (FromList init)) -> SomeDist t
+  ProposalDist init ('(n, t) ': xs) = (Rec (FromList init) -> SomeDist t) :|: (ProposalDist init xs)
+
+-- | The type of record required to provide the
+-- condition is the same type as an observation from
+-- any model.
+type Condition conds m = Observation conds m
+
 -- | Closed type family to compute necessary type of a
 -- probabilistic model for simulation.
 type family SimulationModel m :: * where
@@ -35,11 +46,13 @@ type family SimulationModel m :: * where
   SimulationModel ((name :=: t) |-> b) = SomeDist (t -> SimulationModel b)
   SimulationModel (a :|: b) = SimulationModel a :|: SimulationModel b
 
+type CanSimulate m = CanSimulate' m Empty (Sample' m)
+
 -- | A model must be an instance of the 'CanSimulate'
 -- typeclass in order to be able to generate samples from
 -- model, receiving as input a Rec p, and returning
 -- a Rec q, which may be different.
-class CanSimulate (model :: *) (p :: Row *) (q :: Row *) where
+class CanSimulate' (model :: *) (p :: Row *) (q :: Row *) where
   runSim
     :: Proxy model
     -> SimulationModel model
@@ -47,17 +60,23 @@ class CanSimulate (model :: *) (p :: Row *) (q :: Row *) where
     -> Rec p
     -> (Rec q, StdGen)
 
-instance (CanSimulate a p q, CanSimulate b q r) => CanSimulate (a :|: b) p r where
+-- | Compute the constraint that the conditions
+-- be in the model.
+type family CanCondition (model :: *) (conds :: [Symbol]) :: Constraint where
+  CanCondition m '[] = ()
+  CanCondition m (s ': ss) = (VarInModel s m, CanCondition m ss)
+
+instance (CanSimulate' a p q, CanSimulate' b q r) => CanSimulate' (a :|: b) p r where
   runSim _ (m :|: m') g rec
     = let (c :: Rec q, g') = runSim (Proxy :: Proxy a) (m :: SimulationModel a) g (rec :: Rec p)
       in runSim (Proxy :: Proxy b) (m' :: SimulationModel b) g' (c :: Rec q)
 
-instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate b p q) => CanSimulate ((name :=: t) |-> b) p q where
+instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate' b p q) => CanSimulate' ((name :=: t) |-> b) p q where
   runSim _ (ToSomeDist f) g rec = (runSim prox (f (rec .! l :: t)) g rec) :: (Rec q, StdGen)
     where l = Label :: Label name
           prox = Proxy :: Proxy b
 
-instance (KnownSymbol name, Extend name t p ~ q) => CanSimulate (name :=: t) p q where
+instance (KnownSymbol name, Extend name t p ~ q) => CanSimulate' (name :=: t) p q where
   runSim _ (SomeDist d) g rec
     = let (res, g') = sampleState d g
           l = Label :: Label name

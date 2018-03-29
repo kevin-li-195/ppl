@@ -18,12 +18,19 @@
 
 module Model.Simulation where
 
+import Data.Proxy
+import Data.OpenRecords
+
+import Model.Internal
 import Model.Types
+import Model.Simulation.Types
+
+import System.Random
 
 -- | Generate a sample from the specified
 -- Bayesian network without any conditioning.
 simulate
-  :: (ValidModel m, CanSimulate m Empty (Sample' m))
+  :: (ValidModel m, CanSimulate m)
   => Proxy m
   -> SimulationModel m
   -> StdGen
@@ -40,10 +47,10 @@ simulate p model gen = runSim p model gen empty
 --
 -- The end of the stream is at the head; the stream
 -- is constructed in reverse.
-posteriorSim
+conditionSim
   ::
   ( ValidModel m
-  , CanSimulate m Empty (Sample' m)
+  , CanSimulate m
   , CanCondition m conds
   ) => Proxy m
     -> Proxy conds
@@ -52,13 +59,12 @@ posteriorSim
     -> Condition conds m
     -> StdGen
     -> [Sample m]
-posteriorSim pm pconds model prop conds g 
-  = let (s, g') = simulate pm model g
-    in psim pm pconds (mkProx pm pconds) model g' prop [s]
+conditionSim pm pconds model prop conds g 
+  = csim pm pconds (mkProx pm pconds) model g prop conds []
 
-psim :: ( CanPropose m conds q
+csim :: ( CanCondition m conds
         , ValidModel m
-        , CanSimulate m Empty (Sample' m)
+        , CanSimulate m
         , RemoveLabels conds (Sample' m) (FromList q)
         , Unobserved m conds ~ q
         )
@@ -69,28 +75,28 @@ psim :: ( CanPropose m conds q
      -> StdGen
      -> ProposalDist (Unobserved m conds) q
      -> Condition conds m
-     -> [Rec (FromList q)]
-     -> [Rec (FromList q)]
-psim pm pconds prox model g prop conds []
-  = psim pm pconds prox model (snd $ next g) prop conds
+     -> [Sample m]
+     -> [Sample m]
+csim pm pconds prox model g prop conds []
+  = csim pm pconds prox model (snd $ next g) prop conds
     [removeLabels pconds $ fst $ simulate pm model g]
-psim pm pconds prox model g prop conds (x : xs)
+csim pm pconds prox model g prop conds (x : xs)
   = let (candidate, g') = propose pm pconds prox prop x g
         (u, g'') = sampleState (Uniform 0 1.0) g'
-    in psim pm pconds prox model g'' prop conds $
+    in csim pm pconds prox model g'' prop conds $
        if u < (acceptance pm pconds candidate x conds)
        then candidate : x : xs
        else x : x : xs
 
 acceptance
   :: Proxy m
-  -> Proxy obs
-  -> Rec (FromList (Unobserved m obs))
+  -> Proxy conds
+  -> Sample m
   -- ^ Candidate
-  -> Rec (FromList (Unobserved m obs))
+  -> Sample m
   -- ^ Previous
-  -> [Observation obs m]
-  -- ^ Observations
+  -> Condition conds m
+  -- ^ Condition
   -> Double
   -- ^ Metropolis-Hastings acceptance ratio
 acceptance pm pobs cand prev obs = undefined
