@@ -71,13 +71,19 @@ type family Fsts (l :: [(a, b)]) :: [a] where
   Fsts '[] = '[]
   Fsts ('(a, b) ': xs) = a ': Fsts xs
 
+type Reverse l = Reverse' l '[]
+
+type family Reverse' (init :: [a]) (rest :: [a]) :: [a] where
+  Reverse' '[] r = r
+  Reverse' (x ': xs) r = Reverse' xs (x ': r)
+
 -- | Computes list of variable names 
--- and types in a model.
+-- and types in a model. Retain order.
 type family ModelVars (m :: *) :: [(Symbol, *)] where
   ModelVars m = ModelVars' '[] m
 
 type family ModelVars' (vars :: [(Symbol, t)]) (m :: *) :: [(Symbol, t)] where
-  ModelVars' l (a :|: b) = ModelVars' (ModelVars' l a) b
+  ModelVars' l (a :|: b) = ModelVars' (ModelVars' l b) a
   ModelVars' l (a |-> b) = ModelVars' l b
   ModelVars' l (name :=: t) = '(name, t) ': l
   ModelVars' _ c = TypeError (

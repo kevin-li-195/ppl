@@ -31,6 +31,9 @@ import System.Random
 -- requirement. It shouldn't actually be necessary
 -- because it's certainly computable with just
 -- 'm' and 'conds' (it's just 'Unobserved m conds')
+--
+-- TODO: First sample generated from the simulation
+-- model doesn't properly incorporate the condition.
 conditionSim
   ::
   ( ValidModel m
@@ -38,7 +41,8 @@ conditionSim
   , Unobserved m conds ~ vars
   , CanSimulate m
   , CanCondition m conds
-  ) => Proxy m
+  ) => Int
+    -> Proxy m
     -> Proxy conds
     -> Proxy vars
     -> SimulationModel m
@@ -47,8 +51,8 @@ conditionSim
     -- ^ This is condition record.
     -> StdGen
     -> [Sample m]
-conditionSim pm pconds pvars model prop conds g 
-  = csim pm pconds pvars model g prop conds []
+conditionSim n pm pconds pvars model prop conds g 
+  = csim n pm pconds pvars model g prop conds []
 
 csim :: ( CanCondition m conds
         , CanPropose m conds vars
@@ -56,7 +60,8 @@ csim :: ( CanCondition m conds
         , ValidModel m
         , CanSimulate m
         )
-     => Proxy m
+     => Int
+     -> Proxy m
      -> Proxy conds
      -> Proxy vars
      -> SimulationModel m
@@ -66,13 +71,14 @@ csim :: ( CanCondition m conds
      -- ^ This is actually the condition record.
      -> [Sample m]
      -> [Sample m]
-csim pm pconds pvars model g prop conds []
-  = csim pm pconds pvars model (snd $ next g) prop conds
+csim 0 pm pconds pvars model g prop conds l = l
+csim n pm pconds pvars model g prop conds []
+  = csim (n-1) pm pconds pvars model (snd $ next g) prop conds
     [fst $ simulate pm model g]
-csim pm pconds pvars model g prop conds (prev : xs)
+csim n pm pconds pvars model g prop conds (prev : xs)
   = let (candidate, g') = propose pm pconds pvars conds prop prev g
         (u, g'') = sampleState (Uniform 0 1.0) g'
-    in csim pm pconds pvars model g'' prop conds $
+    in csim (n-1) pm pconds pvars model g'' prop conds $
        if u < (acceptance pm candidate prev)
        then candidate : prev : xs
        else prev : prev : xs

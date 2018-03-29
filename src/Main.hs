@@ -47,7 +47,7 @@ pNonObs :: Proxy NonObs
 pNonObs = Proxy
 
 prop :: ProposalDist MyModel NonObs
-prop = ToSomeDist (\s -> SomeDist (Beta 2 2)) :|: ToSomeDist (\b -> SomeDist (Bernoulli b))
+prop = ToSomeDist (\s -> SomeDist (Beta 2 2)) :|: ToSomeDist (\b -> SomeDist (Bernoulli (0.5 :: Double)))
 
 l :: Label "numHeads"
 l = Label
@@ -58,5 +58,6 @@ conds = l :<- 25 .| makeRecord p
 
 main :: IO ()
 main = do
-  samples <- take 1000 <$> conditionSim p pConds pNonObs model prop conds <$> getStdGen
+  print "hi"
+  samples <- conditionSim 10 p pConds pNonObs model prop conds <$> getStdGen
   print samples
