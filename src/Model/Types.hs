@@ -31,16 +31,21 @@ import Model.Internal
 import System.Random
 
 -- | Send a Sample to a Record for CSV export.
-class HasCsvRecord (m :: *) (vars :: [Symbol]) where
-  makeRec :: Proxy m -> Proxy vars -> Sample m -> Record
+class HasCsvRecord (m :: *) (a :: *) where
+  makeRec :: Proxy m -> Proxy a -> Sample m -> Record
 
-instance {-# OVERLAPPING #-} HasCsvRecord m '[] where
-  makeRec _ _ _ = V.empty
+instance (ToField t, KnownSymbol n, (Sample' m :! n) ~ t) => HasCsvRecord m (n :=: t) where
+  makeRec _ _ sample = V.singleton $ toField $ sample Data.OpenRecords..! l
+    where l = Label :: Label n
 
-instance {-# OVERLAPPABLE #-} ( ToField (Sample' m :! x), KnownSymbol x, HasCsvRecord m xs) => HasCsvRecord m (x ': xs) where
-  makeRec pm pvars sample = toField (sample Data.OpenRecords..! l) `V.cons` makeRec pm pvars' sample
-    where l = Label :: Label x
-          pvars' = Proxy :: Proxy xs
+instance HasCsvRecord m b => HasCsvRecord m (a |-> b) where
+  makeRec pm _ sample = makeRec pm pb sample
+    where pb = Proxy :: Proxy b
+
+instance (HasCsvRecord m a, HasCsvRecord m b) => HasCsvRecord m (a :|: b) where
+  makeRec pm _ sample = makeRec pm pa sample V.++ makeRec pm pb sample
+    where pa = Proxy :: Proxy a
+          pb = Proxy :: Proxy b
           
 instance ToField Bool where
   toField b = if b then toField (1 :: Int) else toField (0 :: Int)

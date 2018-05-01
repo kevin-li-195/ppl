@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d22dd4113f0ca0aff2c4f73f0e20efc1090d2dd19cec3698f33725cf4f254fd3
+-- hash: 1255cd1b311c9ac1a03b7c5c1b23f17509dedd9c988f9d76ef39d2968d6c38e8
 
 name:           ppl
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
     , base >=4.7 && <5
     , bytestring >=0.10 && <0.11
     , cassava >=0.5 && <0.6
+    , math-functions >=0.2 && <0.3
     , mtl >=2.2 && <2.3
     , random >=1.1 && <1.2
     , random-fu >=0.2 && <0.3
@@ -61,6 +62,7 @@ executable ppl-exe
     , base >=4.7 && <5
     , bytestring >=0.10 && <0.11
     , cassava >=0.5 && <0.6
+    , math-functions >=0.2 && <0.3
     , mtl >=2.2 && <2.3
     , ppl
     , random >=1.1 && <1.2
@@ -89,6 +91,7 @@ test-suite ppl-test
     , base >=4.7 && <5
     , bytestring >=0.10 && <0.11
     , cassava >=0.5 && <0.6
+    , math-functions >=0.2 && <0.3
     , mtl >=2.2 && <2.3
     , ppl
     , random >=1.1 && <1.2

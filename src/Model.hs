@@ -27,5 +27,5 @@ initSample p = initRecord p empty
 
 -- | Convert a list of Samples to a ByteString containing
 -- the CSV row.
-toCsvBS :: HasCsvRecord m vars => Proxy m -> Proxy (vars :: [Symbol]) -> [Sample m] -> BS.ByteString
-toCsvBS pm pvars sample = encode $ map (makeRec pm pvars) sample
+toCsvBS :: HasCsvRecord m m => Proxy m -> [Sample m] -> BS.ByteString
+toCsvBS pm samples = encode $ map (makeRec pm pm) samples

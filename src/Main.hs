@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, DataKinds, KindSignatures #-}
+{-# LANGUAGE TypeOperators, DataKinds #-}
 
 module Main where
 
@@ -34,14 +34,10 @@ model
   :|: ToSomeDist (\b -> SomeDist (Bernoulli b))
   :|: ToSomeDist (\p -> SomeDist (Binomial 100 p))
 
--- TODO: Automate some of the boilerplate.
-type Obs = '[]
-
 p :: Proxy Coins
 p = Proxy
 
-pConds :: Proxy ('[] :: [Symbol])
-pConds = Proxy
+pConds = Proxy :: Proxy '["numHeads"]
 
 prop :: ProposalDist Coins
 prop = 
@@ -61,10 +57,8 @@ conds = numHeads :<- 25 .| initSample p
 start :: Sample Coins
 start = bias :<- 0.5 .| coin :<- True .| numHeads :<- 25 .| initSample p
 
-pvars = Proxy :: Proxy '["bias", "coin", "numHeads"]
-
 main :: IO ()
 main = do
   g <- getStdGen
   let samples = csim 100 p pConds model prop conds g [start]
-  putStrLn $ BS.unpack $ toCsvBS p pvars samples
+  putStrLn $ BS.unpack $ toCsvBS p samples
