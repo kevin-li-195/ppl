@@ -34,30 +34,29 @@ import System.Random
 --
 -- TODO: First sample generated from the simulation
 -- model doesn't properly incorporate the condition.
-conditionSim
-  ::
-  ( ValidModel m
-  , CanPropose m conds vars
-  , Unobserved m conds ~ vars
-  , CanSimulate m
-  , CanCondition m conds
-  , HasPdf m m
-  ) => Int
-    -> Proxy m
-    -> Proxy conds
-    -> Proxy vars
-    -> SimulationModel m
-    -> ProposalDist m vars
-    -> Sample m
-    -- ^ This is condition record.
-    -> StdGen
-    -> [Sample m]
-conditionSim n pm pconds pvars model prop conds g 
-  = csim n pm pconds pvars model prop conds g []
+-- conditionSim
+--   ::
+--   ( ValidModel m
+--   , CanPropose m conds vars
+--   , Unobserved m conds ~ vars
+--   , CanSimulate m
+--   , CanCondition m conds
+--   , HasPdf m m
+--   ) => Int
+--     -> Proxy m
+--     -> Proxy conds
+--     -> Proxy vars
+--     -> SimulationModel m
+--     -> ProposalDist m
+--     -> Sample m
+--     -- ^ This is condition record.
+--     -> StdGen
+--     -> [Sample m]
+-- conditionSim n pm pconds pvars model prop conds g 
+--   = csim n pm pconds pvars model prop conds g []
 
 csim :: ( CanCondition m conds
-        , CanPropose m conds vars
-        , Unobserved m conds ~ vars
+        , CanPropose m m conds
         , ValidModel m
         , CanSimulate m
         , HasPdf m m
@@ -65,22 +64,21 @@ csim :: ( CanCondition m conds
      => Int
      -> Proxy m
      -> Proxy conds
-     -> Proxy vars
      -> SimulationModel m
-     -> ProposalDist m vars
+     -> ProposalDist m
      -> Sample m
      -- ^ This is actually the condition record.
      -> StdGen
      -> [Sample m]
      -> [Sample m]
-csim 0 pm pconds pvars model prop conds g l = l
-csim n pm pconds pvars model prop conds g []
-  = csim (n-1) pm pconds pvars model prop conds (snd $ next g)
+csim 0 pm pconds model prop conds g l = l
+csim n pm pconds model prop conds g []
+  = csim (n-1) pm pconds model prop conds (snd $ next g)
     [fst $ simulate pm model g]
-csim n pm pconds pvars model prop conds g (prev : xs)
-  = let (candidate, g') = propose pm pconds pvars conds prop prev g
+csim n pm pconds model prop conds g (prev : xs)
+  = let (candidate, g') = propose pm pm pconds conds prop prev (initCondRecord pm pconds conds) g
         (u, g'') = sampleState (Uniform 0 1.0) g'
-    in csim (n-1) pm pconds pvars model prop conds g'' $
+    in csim (n-1) pm pconds model prop conds g'' $
        if u < (acceptance pm model candidate prev)
        then candidate : prev : xs
        else prev : prev : xs

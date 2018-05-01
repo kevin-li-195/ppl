@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
@@ -10,6 +11,9 @@
 
 module Model where
 
+import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.Csv
+import GHC.TypeLits
 import Data.OpenRecords
 import Data.Proxy
 
@@ -17,5 +21,11 @@ import Model.Types
 import Model.Internal
 import Model.Simulation.Types
 
-makeRecord :: HasRecord m => Proxy m -> Sample m
-makeRecord p = initRecord p empty
+-- | Initialize empty Sample records.
+initSample :: HasRecord m => Proxy m -> Sample m
+initSample p = initRecord p empty
+
+-- | Convert a list of Samples to a ByteString containing
+-- the CSV row.
+toCsvBS :: HasCsvRecord m vars => Proxy m -> Proxy (vars :: [Symbol]) -> [Sample m] -> BS.ByteString
+toCsvBS pm pvars sample = encode $ map (makeRec pm pvars) sample

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 77b534be91a5ffe9979efe41da01c5b9d43425c5026e3209a90a6ce0a84d4bfe
+-- hash: d22dd4113f0ca0aff2c4f73f0e20efc1090d2dd19cec3698f33725cf4f254fd3
 
 name:           ppl
 version:        0.1.0.0
@@ -31,9 +31,12 @@ library
   build-depends:
       CTRex >=0.6 && <0.7
     , base >=4.7 && <5
+    , bytestring >=0.10 && <0.11
+    , cassava >=0.5 && <0.6
     , mtl >=2.2 && <2.3
     , random >=1.1 && <1.2
     , random-fu >=0.2 && <0.3
+    , vector >=0.12 && <0.13
   exposed-modules:
       Main
       Model
@@ -56,10 +59,13 @@ executable ppl-exe
   build-depends:
       CTRex >=0.6 && <0.7
     , base >=4.7 && <5
+    , bytestring >=0.10 && <0.11
+    , cassava >=0.5 && <0.6
     , mtl >=2.2 && <2.3
     , ppl
     , random >=1.1 && <1.2
     , random-fu >=0.2 && <0.3
+    , vector >=0.12 && <0.13
   other-modules:
       Model
       Model.Condition
@@ -81,10 +87,13 @@ test-suite ppl-test
   build-depends:
       CTRex >=0.6 && <0.7
     , base >=4.7 && <5
+    , bytestring >=0.10 && <0.11
+    , cassava >=0.5 && <0.6
     , mtl >=2.2 && <2.3
     , ppl
     , random >=1.1 && <1.2
     , random-fu >=0.2 && <0.3
+    , vector >=0.12 && <0.13
   other-modules:
       Paths_ppl
   default-language: Haskell2010

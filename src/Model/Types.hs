@@ -16,10 +16,12 @@ module Model.Types where
 
 import Control.Monad.State
 
+import Data.Csv
 import Data.Kind
 import Data.OpenRecords
 import Data.Proxy
 import Data.Random
+import qualified Data.Vector as V
 
 import GHC.TypeLits
 
@@ -27,6 +29,21 @@ import Model.Internal
 import Model.Internal
 
 import System.Random
+
+-- | Send a Sample to a Record for CSV export.
+class HasCsvRecord (m :: *) (vars :: [Symbol]) where
+  makeRec :: Proxy m -> Proxy vars -> Sample m -> Record
+
+instance {-# OVERLAPPING #-} HasCsvRecord m '[] where
+  makeRec _ _ _ = V.empty
+
+instance {-# OVERLAPPABLE #-} ( ToField (Sample' m :! x), KnownSymbol x, HasCsvRecord m xs) => HasCsvRecord m (x ': xs) where
+  makeRec pm pvars sample = toField (sample Data.OpenRecords..! l) `V.cons` makeRec pm pvars' sample
+    where l = Label :: Label x
+          pvars' = Proxy :: Proxy xs
+          
+instance ToField Bool where
+  toField b = if b then toField (1 :: Int) else toField (0 :: Int)
 
 -- | Typeclass for removing list of Labels from a record
 -- given a list of Symbols.
