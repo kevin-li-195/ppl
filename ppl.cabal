@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f47934d80040af1332c5eacde6e4082e4d97ffeb6ac911b532159e40c4a828c6
+-- hash: 77b534be91a5ffe9979efe41da01c5b9d43425c5026e3209a90a6ce0a84d4bfe
 
 name:           ppl
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       Model.Condition
       Model.Condition.Types
       Model.Internal
+      Model.PDF
       Model.Simulation
       Model.Simulation.Types
       Model.Types
@@ -64,6 +65,7 @@ executable ppl-exe
       Model.Condition
       Model.Condition.Types
       Model.Internal
+      Model.PDF
       Model.Simulation
       Model.Simulation.Types
       Model.Types

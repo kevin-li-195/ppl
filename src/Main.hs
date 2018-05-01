@@ -19,25 +19,22 @@ import Model.Simulation.Types
 
 import System.Random
 
-type MyModel
+type Coins
   = "bias" :=: Double
   :|: "bias" :=: Double |-> "coin" :=: Bool
   :|: "bias" :=: Double |-> "numHeads" :=: Int
 
-type DupModel
-  = "coin" :=: Double
-  :|: "undecl" :=: Double |-> "bias" :=: Bool
-
-model :: SimulationModel MyModel
+model :: SimulationModel Coins
 model 
   = SomeDist (Beta 2 2)
   :|: ToSomeDist (\b -> SomeDist (Bernoulli b))
   :|: ToSomeDist (\p -> SomeDist (Binomial 100 p))
 
+-- TODO: Automate some of the boilerplate.
 type Obs = '["numHeads"]
-type NonObs = Unobserved MyModel Obs
+type NonObs = Unobserved Coins Obs
 
-p :: Proxy MyModel
+p :: Proxy Coins
 p = Proxy
 
 pConds :: Proxy Obs
@@ -46,18 +43,25 @@ pConds = Proxy
 pNonObs :: Proxy NonObs
 pNonObs = Proxy
 
-prop :: ProposalDist MyModel NonObs
-prop = ToSomeDist (\s -> SomeDist (Beta 2 2)) :|: ToSomeDist (\b -> SomeDist (Bernoulli (0.5 :: Double)))
+prop :: ProposalDist Coins NonObs
+prop = 
+  ToSomeDist (\s -> SomeDist (Beta 2 2)) 
+  :|: ToSomeDist (\b -> SomeDist (Bernoulli (0.5 :: Double)))
 
-l :: Label "numHeads"
-l = Label
+numHeads = Label :: Label "numHeads"
+bias = Label :: Label "bias"
+coin = Label :: Label "coin"
 
 -- TODO: Write sugar for literal conditions.
-conds :: Sample MyModel
-conds = l :<- 25 .| makeRecord p
+conds :: Sample Coins
+conds = numHeads :<- 25 .| makeRecord p
+
+-- Optionally provide start.
+start :: Sample Coins
+start = bias :<- 0.5 .| coin :<- True .| numHeads :<- 25 .| makeRecord p
 
 main :: IO ()
 main = do
-  print "hi"
-  samples <- conditionSim 10 p pConds pNonObs model prop conds <$> getStdGen
+  g <- getStdGen
+  let samples = csim 10 p pConds pNonObs model prop conds g [start]
   print samples

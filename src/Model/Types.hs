@@ -52,7 +52,7 @@ instance (KnownSymbol s, RemoveLabels ss p q, q :- s ~ r) => RemoveLabels (s ': 
 -- Most notably, we will need a way to wrap arbitrary pure
 -- functions in a SomeDist for maximum generality.
 data SomeDist t where
-  SomeDist :: (Distribution d t) => d t -> SomeDist t
+  SomeDist :: (Distribution d t, PDF d t) => d t -> SomeDist t
   ToSomeDist :: t -> SomeDist t
 
 -- | List of variable-type pairs minus the given observed

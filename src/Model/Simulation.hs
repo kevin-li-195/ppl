@@ -22,6 +22,7 @@ import Data.Proxy
 import Data.OpenRecords
 import Data.Random
 
+import Model.PDF
 import Model.Internal
 import Model.Types
 import Model.Simulation.Types

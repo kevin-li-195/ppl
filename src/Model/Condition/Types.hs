@@ -37,6 +37,7 @@ import GHC.TypeLits
 
 import Model.Internal
 import Model.Types
+import Model.Simulation.Types
 
 import System.Random
 
@@ -163,6 +164,34 @@ instance {-# OVERLAPPABLE #-}
                    where pss = Proxy :: Proxy (ss :: [(Symbol, *)])
                          l = Label :: Label s
               _ -> error "Uh oh! You broke the universe again!"
+
+-- | Given a model, compute the log-pdf of the model
+-- given instantiations at each node.
+-- We choose to use the log-pdf primarily because
+-- large models will wind up with tiny numbers.
+class HasPdf (m :: *) (a :: *) where
+  evalLogPdf :: Proxy m -> Proxy a -> SimulationModel a -> Sample m -> Double
+
+-- | Splitting at two nodes; eval both, sum them
+-- (conditional independence structure allows this).
+instance (HasPdf m a, HasPdf m b) => HasPdf m (a :|: b) where
+  evalLogPdf pm _ (a' :|: b') sample = evalLogPdf pm pa a' sample + evalLogPdf pm pb b' sample
+    where pa = Proxy :: Proxy a
+          pb = Proxy :: Proxy b
+
+instance ( (Sample' m :! name) ~ t
+         , KnownSymbol name
+         ) => HasPdf m (name :=: t) where
+  evalLogPdf pm _ (SomeDist d) sample = log $ pdf d (sample .! l)
+    where l = Label :: Label name
+
+instance ( HasPdf m b
+         , KnownSymbol name
+         , (Sample' m :! name) ~ t
+         ) => HasPdf m ((name :=: t) |-> b) where
+  evalLogPdf pm _ (ToSomeDist f) sample = evalLogPdf pm p (f $ sample .! l) sample
+    where p = Proxy :: Proxy b
+          l = Label :: Label name
 
 -- IDEA: INSTEAD OF USING A DIFFERENT TYPE
 -- FOR A CONDITION, JUST USE THE SAMPLE TYPE.

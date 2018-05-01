@@ -41,6 +41,7 @@ conditionSim
   , Unobserved m conds ~ vars
   , CanSimulate m
   , CanCondition m conds
+  , HasPdf m m
   ) => Int
     -> Proxy m
     -> Proxy conds
@@ -52,44 +53,52 @@ conditionSim
     -> StdGen
     -> [Sample m]
 conditionSim n pm pconds pvars model prop conds g 
-  = csim n pm pconds pvars model g prop conds []
+  = csim n pm pconds pvars model prop conds g []
 
 csim :: ( CanCondition m conds
         , CanPropose m conds vars
         , Unobserved m conds ~ vars
         , ValidModel m
         , CanSimulate m
+        , HasPdf m m
         )
      => Int
      -> Proxy m
      -> Proxy conds
      -> Proxy vars
      -> SimulationModel m
-     -> StdGen
      -> ProposalDist m vars
      -> Sample m
      -- ^ This is actually the condition record.
+     -> StdGen
      -> [Sample m]
      -> [Sample m]
-csim 0 pm pconds pvars model g prop conds l = l
-csim n pm pconds pvars model g prop conds []
-  = csim (n-1) pm pconds pvars model (snd $ next g) prop conds
+csim 0 pm pconds pvars model prop conds g l = l
+csim n pm pconds pvars model prop conds g []
+  = csim (n-1) pm pconds pvars model prop conds (snd $ next g)
     [fst $ simulate pm model g]
-csim n pm pconds pvars model g prop conds (prev : xs)
+csim n pm pconds pvars model prop conds g (prev : xs)
   = let (candidate, g') = propose pm pconds pvars conds prop prev g
         (u, g'') = sampleState (Uniform 0 1.0) g'
-    in csim (n-1) pm pconds pvars model g'' prop conds $
-       if u < (acceptance pm candidate prev)
+    in csim (n-1) pm pconds pvars model prop conds g'' $
+       if u < (acceptance pm model candidate prev)
        then candidate : prev : xs
        else prev : prev : xs
     -- where pPropVars = Proxy :: Proxy (Unobserved m conds)
 
+-- | In order to compute the acceptance probability,
+-- we have to compute the ratio of the likelihood of
+-- this new sample over the likelihood of the older
+-- sample. Here, we have to obtain the joint pdf of
+-- values of the network.
 acceptance
-  :: Proxy m
+  :: HasPdf m m
+  => Proxy m
+  -> SimulationModel m
   -> Sample m
   -- ^ Candidate
   -> Sample m
   -- ^ Previous
   -> Double
   -- ^ Metropolis-Hastings acceptance ratio
-acceptance pm cand prev = 1 -- testing with accept all.
+acceptance pm model cand prev = exp $ evalLogPdf pm pm model cand - evalLogPdf pm pm model prev
