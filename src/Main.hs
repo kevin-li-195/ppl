@@ -7,7 +7,6 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import GHC.TypeLits
 import Data.OpenRecords
 import Data.Proxy
--- import Data.Random
 
 import Model
 import Model.PDF
@@ -49,13 +48,13 @@ conds = numHeads :<- 25 .| initSample p
 
 -- | Initial observation for Metropolis-Hastings
 start :: Sample Coins
-start = bias :<- 0.5 .| coin :<- True .| numHeads :<- 25 .| initSample p
+start = bias :<- 0.5 .| numHeads :<- 25 .| initSample p
 
 -- | Using MH to solve this is a bit overboard, but oh well.
 type RainModel 
-  =  "prob" :=: Double
+  = "prob" :=: Double
   :|: "prob" :=: Double |-> "rain" :=: Bool
-  :|: "rain" :=: |-> "sprinkler" :=: Bool
+  :|: "rain" :=: Bool |-> "sprinkler" :=: Bool
   -- ^ The sprinkler will usually be off if it's raining
   :|: "rain" :=: Bool |-> "sprinkler" :=: Bool |-> "grass" :=: Bool
   -- ^ Grass being wet depends on both rain and sprinkler
@@ -63,10 +62,10 @@ type RainModel
 rsCpd r s = if r && s then bernoulli 0.99
             else if r && not s then bernoulli 0.7
             else if not r && s then bernoulli 0.4
-            else bernolli 0.1
+            else bernoulli 0.1
 
-rain :: SimulationModel RainModel
-rain = beta 1 5 -- expect 20% rain prob in general
+rainModel :: SimulationModel RainModel
+rainModel = beta 1 5 -- expect 20% rain prob in general
   :|: (\p -> bernoulli p)
   :|: (\r -> if r then bernoulli 0.1 else bernoulli 0.8)
   :|: rsCpd
@@ -85,7 +84,7 @@ rainCond = grass :<- True .| initSample rainProx
 -- | Main
 main :: IO ()
 main = do
-  g <- getStdGen
+  let g = mkStdGen 123
   let samples = csim 10000 p pConds model prop conds g [start]
   -- | TODO: CSV export should export the heads of the columns;
   -- currently it outputs variables in the order in which they're

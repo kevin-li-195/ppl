@@ -73,7 +73,7 @@ instance Eq a => PDF (Categorical Double) a where
   logPdf d = log . pdf d
 
 instance PDF Exponential Double where
-  pdf (Exp d) x = d * exp(-d * x)
+  pdf (Exp d) x = if x >= 0 then d * exp(-d * x) else 0
   logPdf d = log . pdf d
 
 -- | TODO: Test which parameterization this is.
