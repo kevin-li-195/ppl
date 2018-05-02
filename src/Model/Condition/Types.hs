@@ -92,7 +92,7 @@ type ProposalDist m = ProposalDist' m m
 type family ProposalDist' (m :: *) (prev :: *) :: * where
   ProposalDist' m (a :|: b) = ProposalDist' m a :|: ProposalDist' m b
   ProposalDist' m ((name :=: t) |-> b) = ProposalDist' m b
-  ProposalDist' m (name :=: t) = SomeDist (Sample m -> SomeDist t)
+  ProposalDist' m (name :=: t) = Sample m -> SomeDist t
   ProposalDist' m x = TypeError (
     Text "Error while computing required type for ProposalDist. The model: "
     :<>:
@@ -171,7 +171,7 @@ instance (HasCondRecord m conds, CanPropose m b conds) => CanPropose m ((name :=
 instance ( HasCondRecord m '[]
          , KnownSymbol n
          , (Sample' m :! n) ~ t) => CanPropose m (n :=: t) '[] where
-  propose pm pt pConds condRec (ToSomeDist f) prev acc g
+  propose pm pt pConds condRec f prev acc g
     = case f prev of
         SomeDist d -> let (new, g') = sampleState d g
                       in (update l new acc, g')
@@ -243,7 +243,7 @@ instance ( HasPdf m b
          , KnownSymbol name
          , (Sample' m :! name) ~ t
          ) => HasPdf m ((name :=: t) |-> b) where
-  evalLogPdf pm _ (ToSomeDist f) sample = evalLogPdf pm p (f $ sample .! l) sample
+  evalLogPdf pm _ f sample = evalLogPdf pm p (f $ sample .! l) sample
     where p = Proxy :: Proxy b
           l = Label :: Label name
 

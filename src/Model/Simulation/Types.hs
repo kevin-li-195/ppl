@@ -32,7 +32,7 @@ import System.Random
 -- probabilistic model for simulation.
 type family SimulationModel m :: * where
   SimulationModel (name :=: t) = SomeDist t
-  SimulationModel ((name :=: t) |-> b) = SomeDist (t -> SimulationModel b)
+  SimulationModel ((name :=: t) |-> b) = (t -> SimulationModel b)
   SimulationModel (a :|: b) = SimulationModel a :|: SimulationModel b
 
 type CanSimulate m = CanSimulate' m Empty (Sample' m)
@@ -61,7 +61,7 @@ instance (CanSimulate' a p q, CanSimulate' b q r) => CanSimulate' (a :|: b) p r 
       in runSim (Proxy :: Proxy b) (m' :: SimulationModel b) g' (c :: Rec q)
 
 instance (KnownSymbol name, ReqArgs ((name :=: t) |-> b) p, CanSimulate' b p q) => CanSimulate' ((name :=: t) |-> b) p q where
-  runSim _ (ToSomeDist f) g rec = (runSim prox (f (rec .! l :: t)) g rec) :: (Rec q, StdGen)
+  runSim _ f g rec = (runSim prox (f (rec .! l :: t)) g rec) :: (Rec q, StdGen)
     where l = Label :: Label name
           prox = Proxy :: Proxy b
 
