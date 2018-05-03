@@ -34,6 +34,9 @@ import Numeric.SpecFunctions
 bernoulli :: Double -> SomeDist Bool
 bernoulli = SomeDist . Bernoulli
 
+constant :: Eq a => a -> SomeDist a
+constant a = categorical [(1, a)]
+
 beta :: Double -> Double -> SomeDist Double
 beta a b = SomeDist $ Beta a b
 

@@ -17,6 +17,7 @@ module Model.Types where
 import Control.Monad.State
 
 import Data.Csv
+
 import Data.Kind
 import Data.OpenRecords
 import Data.Proxy

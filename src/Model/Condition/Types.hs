@@ -176,7 +176,6 @@ instance ( HasCondRecord m '[]
         SomeDist d -> let (new, g') = sampleState d g
                       in (update l new acc, g')
                       where l = Label :: Label n
-        _ -> error "I'm disappointed in you."
 
 -- | If we're trying to propose something that's in the conditions,
 -- then we just get the condition value.

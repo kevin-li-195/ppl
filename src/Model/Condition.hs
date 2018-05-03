@@ -82,7 +82,6 @@ csim n pm pconds model prop conds g (prev : xs)
        if u < (acceptance pm model candidate prev)
        then candidate : prev : xs
        else prev : prev : xs
-    -- where pPropVars = Proxy :: Proxy (Unobserved m conds)
 
 -- | In order to compute the acceptance probability,
 -- we have to compute the ratio of the likelihood of
