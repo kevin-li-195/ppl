@@ -1,0 +1,2 @@
+- Correct acceptance ratio (use MH, not Metropolis since we don't enforce
+symmetric proposal distributions).
