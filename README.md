@@ -25,5 +25,5 @@ Bayesian networks (e.g. acyclicality, connected, type-safety, variables
 declared before usage). Hopefully this project is interesting enough,
 and has some decent ideas for further extension.
 
-For a super brief introduction on this project, here the writeup
+For a super brief introduction on this project, [here](writeup.pdf) is the writeup
 that I did for my Bayesian stats class.
